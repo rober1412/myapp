@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}-database
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "myapp.name" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "myapp.name" . }}
+    spec:
+      containers:
+        - name: database
+          image: "{{ .Values.database.image }}"
+          ports:
+            - containerPort: {{ .Values.database.servicePort }}
+      volumes:
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: {{ include "myapp.fullname" . }}-database-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "myapp.fullname" . }}-database-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.database.persistence.size }}
